@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'application'
+    id("com.gradleup.shadow") version "9.2.2" // For the Uber-JAR
+}
+
+group = 'dev.agrim'
+version = '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://repository.apache.org/content/repositories/snapshots/" } // Sometimes needed for newer Flink versions
+}
+
+def flinkVersion = '1.18.1' // Use a stable version
+
+dependencies {
+    // Core Flink APIs - marked as compileOnly (equivalent to Maven's 'provided')
+    compileOnly "org.apache.flink:flink-streaming-java:${flinkVersion}"
+    compileOnly "org.apache.flink:flink-clients:${flinkVersion}"
+    compileOnly "org.apache.flink:flink-core:${flinkVersion}"
+
+    // Add logging and the common example utility
+    implementation "org.slf4j:slf4j-log4j12:1.7.30"
+    implementation "org.apache.flink:flink-walkthrough-common:${flinkVersion}"
+}
+
+// Configure the Shadow JAR task
+shadowJar {
+    archiveBaseName.set('streaming-word-count')
+    archiveClassifier.set('') // Remove the default classifier, making the name simpler
+    
+    // Define the Main-Class for easy execution
+    manifest {
+        attributes 'Main-Class': 'dev.agrim.flink.Main' // Replace with your actual main class
+    }
+}

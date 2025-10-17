@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  # 1. THE JOB MANAGER
+  jobmanager:
+    image: apache/flink:1.18-scala_2.12 # Use the official Flink image
+    hostname: jobmanager
+    # Set the main command to start the job manager process
+    command: jobmanager
+    ports:
+      # Expose Flink's Web UI (8081) for job submission/monitoring
+      - "8081:8081"
+    environment:
+      # Tell the TaskManagers how to connect to the JobManager
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTasksSlots: 4
+        
+  # 2. THE TASK MANAGER
+  taskmanager:
+    image: apache/flink:1.18-scala_2.12
+    hostname: taskmanager
+    command: taskmanager
+    volumes:
+      # Mounts your local 'input' folder to the container's '/opt/flink/usermount/'
+      - ./input:/opt/flink/usermount/
+    environment:
+      # Set the JobManager connection address
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+    # Ensure the TaskManager only starts after the JobManager is ready
+    depends_on:
+      - jobmanager
+    # You can scale this service to run multiple TaskManagers!
+    # Deploy an array of TaskManagers for parallel processing
+    scale: 3
